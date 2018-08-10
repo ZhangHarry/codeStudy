@@ -6,14 +6,14 @@
  - 中的，小玩具比如自己实现的简单 json parser  
  - 大的比如Disruptor源代码（为了方便查看和记录，这里直接导入了源代码，然后加了注释）。   
  ----
-**update 2018/08/02** : 部分代码从codeExercise迁移过来，codeExercise作为算法题的专用仓库。   
+**update 2018/08/02** : 部分代码从codeExercise迁移过来，codeExercise作为算法题的专用仓库。被迁移代码的相关介绍日后补充。   
 
 -----
-
+## 实验记录  
 + ### System.gc()是否立即执行？  
 测试版本：HotSpot JDK 1.8  
 测试代码：Tutorial.essential.TestSystemGc  
-测试过程与结论：分别打印调用和不调用System.gc()时进行的gc信息，结论是立即执行，另外java doc里也描述说When control returns from the method call, the Java Virtual Machine has made a best effort to reclaim space from all discarded objects.  
+测试过程与结论：分别打印调用和不调用System.gc()时进行的gc信息，结论是**立即执行**，另外java doc里也描述说When control returns from the method call, the Java Virtual Machine has made a best effort to reclaim space from all discarded objects.  
   
 不调用System.gc()  
 ```
