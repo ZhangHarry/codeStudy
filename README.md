@@ -10,7 +10,7 @@
 
 -----
 ## 实验记录  
-+ ### System.gc()是否立即执行？  
++ ### System.gc()导致的full gc操作是否立即执行？  
 测试版本：HotSpot JDK 1.8  
 测试代码：Tutorial.essential.TestSystemGc  
 测试过程与结论：分别打印调用和不调用System.gc()时进行的gc信息，结论是**立即执行**，另外java doc里也描述说When control returns from the method call, the Java Virtual Machine has made a best effort to reclaim space from all discarded objects.  
