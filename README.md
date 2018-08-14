@@ -46,5 +46,47 @@ Heap
   object space 86016K, 0% used [0x0000000082000000,0x00000000820ca530,0x0000000087400000)
  Metaspace       used 3346K, capacity 4496K, committed 4864K, reserved 1056768K
   class space    used 361K, capacity 388K, committed 512K, reserved 1048576K
-
+``` 
++ ### 同样语法，在不同的JDK版本下编译结果不一样可能会导致错误。 
+经验：**使用明确的写法**  
+背景：需要集成与修改一个老旧的学术界系统，该系统只提供了一部分java文件，其他的都是class文件。对于class的类，当我需要修改它时就需要反编译再修改。我遇到了一个奇怪的情况：修改后系统的运行结果不同。最终确定原因是原始class是JDK 1.5下编译的，反编译后一些语句在JDK 1.7下编译结果不同。  
 ```
+public static void setSrcInfo(SourceInfo srcInfo) { srcInfo = srcInfo; } 
+public static void setMr(ModelRepository mr) { mr = mr; }
+```
+上面的语句在原始class文件中会调用putstatic字节码给static变量赋值，在新的class文件中则没有。 
+
+java 1.7 （major version = 51）  
+```
+public static void setSrcInfo(recoder.service.SourceInfo);  
+descriptor: (Lrecoder/service/SourceInfo;)V  
+fags: ACC_PUBLIC, ACC_STATIC  
+Code: stack=1, locals=1, args_size=1 
+0: aload_0  
+1: astore_0  
+2: return 
+LineNumberTable:  
+line 246: 0  
+line 247: 2  
+LocalVariableTable:  
+Start Length Slot Name Signature  
+0 3 0 srcInfo Lrecoder/service/SourceInfo;
+```
+
+java 1.5（major version = 49）  
+```
+public static void setSrcInfo(recoder.service.SourceInfo);  
+descriptor: (Lrecoder/service/SourceInfo;)V  
+flags: ACC_PUBLIC, ACC_STATIC  
+Code: stack=1, locals=1, args_size=1  
+0: aload_0  
+1: putstatic #12 // Field srcInfo:Lrecoder/service/SourceInfo;  
+4: return  
+LineNumberTable:  
+line 219: 0  
+line 220: 4  
+LocalVariableTable:  
+Start Length Slot Name Signature  
+0 5 0 srcInfo Lrecoder/service/SourceInfo;
+```
+解决方案：明确```ReferenceConverter.mr=mr```。就可以
