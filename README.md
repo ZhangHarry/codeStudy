@@ -90,3 +90,30 @@ Start Length Slot Name Signature
 0 5 0 srcInfo Lrecoder/service/SourceInfo;
 ```
 解决方案：明确```ReferenceConverter.mr=mr```。就可以
++ ### MySQL内联测试的一个例子  
+背景：5.7.14-log MySQL Community Server，对于两张表class(主键classid)，classmetric(主键id，一般列classid)，对该两张表进行内联操作。两张表存在一一对应关系，所以数据量一致。  
+```
+select * from class,classmetric  where class.classid=classmetric.classid and classmetric.classid >= 89630 and classmetric.classid<= 90813;
+```  
+耗时：~0.4s  
+```
+select * from class,classmetric  where classmetric.classid=class.classid and class.classid >=89630 and class.classid<= 90813 ;
+```
+耗时：~1s  
+原因：通过explain查看执行计划，发现执行顺序：先对classmetric表进行完全遍历，然后在class表上使用classid索引，区别在于第一条语句的extra是using where表示对classmetric表进行完全遍历时还进行了where过滤，而第二条是在class表上进行过滤。  比较好奇的事情在于：**把class,classmetric改成classmetric,class后并不会修改执行顺序**
+```
++----+-------------+-------------+------------+--------+---------------+---------+---------+-------------------------------+-------+----------+-------------+
+| id | select_type | table       | partitions | type   | possible_keys | key     | key_len | ref                           | rows  | filtered | Extra       |
++----+-------------+-------------+------------+--------+---------------+---------+---------+-------------------------------+-------+----------+-------------+
+|  1 | SIMPLE      | classmetric | NULL       | ALL    | NULL          | NULL    | NULL    | NULL                          | 85599 |    11.11 | Using where |
+|  1 | SIMPLE      | class       | NULL       | eq_ref | PRIMARY       | PRIMARY | 8       | classmetric.classid           |     1 |   100.00 | Using where |
++----+-------------+-------------+------------+--------+---------------+---------+---------+-------------------------------+-------+----------+-------------+
+```
+```
++----+-------------+-------------+------------+--------+---------------+---------+---------+-------------------------------+-------+----------+-------------+
+| id | select_type | table       | partitions | type   | possible_keys | key     | key_len | ref                           | rows  | filtered | Extra       |
++----+-------------+-------------+------------+--------+---------------+---------+---------+-------------------------------+-------+----------+-------------+
+|  1 | SIMPLE      | classmetric | NULL       | ALL    | NULL          | NULL    | NULL    | NULL                          | 85599 |   100.00 | NULL        |
+|  1 | SIMPLE      | class       | NULL       | eq_ref | PRIMARY       | PRIMARY | 8       | classmetric.classid           |     1 |   100.00 | Using where |
++----+-------------+-------------+------------+--------+---------------+---------+---------+-------------------------------+-------+----------+-------------+
+```
